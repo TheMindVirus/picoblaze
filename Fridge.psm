@@ -1,0 +1,333 @@
+; Constants
+Low       EQU   0;
+High      EQU   255;
+tempMin   EQU   2;
+tempMax   EQU   48;
+
+; States
+errorState    EQU   s0;
+motorEnable   EQU   s1;
+motorState    EQU   s2;
+doorState     EQU   s3;
+
+; Variables
+tmp          EQU   sA;
+motorTemp    EQU   sB;
+fridgeTemp   EQU   sC;
+targetTemp   EQU   sD;
+watchdog     EQU   sE;
+doorTimer    EQU   sF;
+
+; Inputs and Outputs
+motorTempSensor    DSIO    $00;   Motor Coil Temperature Sensor
+fridgeTempSensor   DSIO    $01;   Fridge Internal Temperature Sensor
+targetTempSwitch   DSIO    $02;   Temperature Target Switch
+fridgeDoor         DSIN    $03;   Fridge Door Sensor
+fridgeMotor        DSOUT   $10;   Motor Relay Output
+fridgeLight	       DSOUT   $11;   Fridge Light Ouptut
+doorBuzzer	       DSOUT   $12;   Door Open Warning
+doorWatchdog       DSOUT   $13;   Door Watchdog Timer
+fridgeWatchdog     DSOUT   $14;   Fridge Watchdog Timer
+errorLight         DSOUT   $15;   Error Light Output
+
+; Initialisation
+start:
+	    ; Zero Memory
+	    SUB errorState, errorState;
+	    SUB motorEnable, motorEnable;
+	    SUB motorState, motorState;
+	    SUB doorState, doorState;
+	
+		SUB tmp, tmp;
+	    SUB motorTemp, motorTemp;
+	    SUB fridgeTemp, fridgeTemp;
+	    SUB targetTemp, targetTemp;
+	    SUB watchdog, watchdog;
+	    SUB doorTimer, doorTimer;
+	    
+	    ; Set Defaults
+	    ADD tmp, 25;    Set to 25
+	    OUT tmp, motorTempSensor;
+	    OUT tmp, fridgeTempSensor;
+	    SUB tmp, 20;    Set to 5
+	    OUT tmp, targetTempSwitch;
+	    ADD tmp, 250;   Set to 255
+	    OUT tmp, fridgeMotor;
+	    SUB tmp, tmp;   Clear
+	    OUT tmp, fridgeMotor;
+	    OUT tmp, fridgeLight;
+	    OUT tmp, doorBuzzer;
+	    OUT tmp, doorWatchdog;
+	    OUT tmp, fridgeWatchdog;
+	    OUT tmp, errorLight;
+	    
+	    JUMP loop;
+
+; Main Loop
+loop:
+	    EINT;   Re-enable Interrupts
+	    JUMP loop;
+
+; Interrupt Handler
+interrupt:
+        ADD watchdog, 5;
+	    CALL C, watchdogReset;
+        CALL fridgeTimer_Tick;
+  		CALL doorTimer_Tick;
+  		CALL screenTimer_Tick;
+	   	RET;
+
+; Reset Watchdog
+watchdogReset:
+	    SUB watchdog, watchdog;
+	    SUB motorEnable, 0;
+	    JUMP NZ, watchdogReset_SKIP_1;
+	        SUB motorState, motorState;
+	        RET;
+	    watchdogReset_SKIP_1:;
+        SUB tmp, tmp;
+        ADD tmp, motorState;
+        CALL Z, motorOnTimer_Tick;
+        CALL NZ, motorOffTimer_Tick;
+        SUB tmp, tmp;
+	    RET;
+
+; Main Fridge Tasks	
+fridgeTimer_Tick:
+	    ; Detect Temperature
+	    IN motorTemp, motorTempSensor;
+		IN fridgeTemp, fridgeTempSensor;
+		IN targetTemp, targetTempSwitch;
+		
+		; Process Errors
+		SUB tmp, tmp;
+		SUB errorState, errorState;
+		ADD tmp, motorTemp;
+		SUB tmp, tempMin;
+		JUMP NC, fridgeTimer_Tick_SKIP_1;
+		    ADD errorState, 1;
+		fridgeTimer_Tick_SKIP_1:;
+		SUB tmp, tmp;
+		ADD tmp, tempMax;
+		SUB tmp, motorTemp;
+		JUMP NC, fridgeTimer_Tick_SKIP_2;
+		    ADD errorState, 2;
+		fridgeTimer_Tick_SKIP_2:;
+		SUB tmp, tmp;
+		ADD tmp, fridgeTemp;
+		SUB tmp, tempMin;
+		JUMP NC, fridgeTimer_Tick_SKIP_3;
+		    ADD errorState, 4;
+		fridgeTimer_Tick_SKIP_3:;
+		SUB tmp, tmp;
+		ADD tmp, tempMax;
+		SUB tmp, fridgeTemp;
+		JUMP NC, fridgeTimer_Tick_SKIP_4;
+		    ADD errorState, 8;
+		fridgeTimer_Tick_SKIP_4:;
+		SUB tmp, tmp;
+		SUB doorState, 0;
+		JUMP Z, fridgeTimer_Tick_SKIP_5;
+		    ADD errorState, 16;
+		fridgeTimer_Tick_SKIP_5:;
+		
+		; Control Motor
+		SUB errorState, 0;
+		JUMP NZ, fridgeTimer_Tick_SKIP_6;
+		SUB tmp, tmp;
+		ADD tmp, fridgeTemp;
+		SUB tmp, targetTemp;
+		JUMP C, fridgeTimer_Tick_SKIP_6;
+		    SUB motorEnable, motorEnable;
+		    ADD motorEnable, High;
+		    RET;
+		fridgeTimer_Tick_SKIP_6:;
+		SUB motorEnable, motorEnable;
+		SUB tmp, tmp;
+		OUT tmp, fridgeMotor;
+		RET;
+
+; Fridge Door Warning Timeout (starting sequence)
+doorTimer_Tick:
+	    SUB tmp, tmp;
+	    IN tmp, fridgeDoor;
+	    SUB tmp, 0; Set Zero Flag Properly
+	    JUMP NZ, doorTimer_Tick_SKIP_1;
+	        SUB doorTimer, doorTimer;
+	        SUB tmp, tmp;
+			OUT tmp, fridgeLight;
+			OUT tmp, doorBuzzer;
+		    RET; Fridge Door Is Closed, fine.
+	    doorTimer_Tick_SKIP_1:;
+	    SUB tmp, tmp;
+	    ADD tmp, High;
+	    OUT tmp, fridgeLight;
+	    SUB tmp, tmp;
+		ADD doorTimer, 5; Fridge Door Is Open, start counting.
+		RET NC; Continue only if Fridge Door has been Open too long.
+	    SUB tmp, tmp;
+	    ADD tmp, High;
+	    OUT tmp, doorBuzzer;
+	    SUB tmp, tmp;
+	    RET;
+	    
+; Update Screen
+screenTimer_Tick:
+	    OUT errorState, errorLight;
+	    OUT watchdog, fridgeWatchdog;
+	    OUT doorTimer, doorWatchdog;
+	    RET;
+
+; Motor Active Timeout (starting sequence)
+motorOnTimer_Tick:
+	    SUB tmp, tmp;
+	    ADD tmp, High;
+	    OUT tmp, fridgeMotor;
+	    ADD motorState, High;
+	    SUB tmp, tmp;
+        RET;
+	    
+; Energy Saving Timeout (starting sequence)
+motorOffTimer_Tick:
+	    SUB tmp, tmp;
+	    ADD tmp, Low;
+	    OUT tmp, fridgeMotor;
+	    SUB motorState, motorState;
+	    SUB tmp, tmp;
+	    RET;
+	    
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+JUMP start;
+CALL interrupt; Interrupt Address

@@ -1,0 +1,282 @@
+; Interrupt.psm
+; F12 to Toggle Simulation/Edit Mode
+; Set Timer to 1 instead of 50
+; Enable Timer Checkbox
+; Ctrl+F2 to Reset Simulation
+; F7 to Step through Simulation
+; F9 to Run Simulation
+
+DSIN $00;            ; Input = $00
+DSOUT $01;           ; Output = $01
+DSIO $02;            ; Input/Output = $02
+
+reg EQU s0;          ; Register reg = s0
+tmp EQU s1;          ; Temporary tmp = s1
+count EQU sF;        ; Counter count = sF
+
+_setup:              ; Entry Point Label
+	SUB reg, reg;    ; Zero the Register
+	SUB tmp, tmp;    ; Zero the Temporary
+	SUB count, count;; Zero the Counter
+	
+_loop:               ; Continuous Loop Label
+	EINT;            ; Re-enable the Interrupts
+	ADD count, 1;    ; Increment the Counter
+	OUT count, $01;  ; Output the Counter
+	JUMP _loop;      ; Repeat the Loop
+
+_callback:           ; Interrupt Routine Label
+	IN tmp, $00;     ; Input to Temporary
+	SUB reg, reg;    ; Zero the Register
+	ADD reg, 255;    ; Add 255 to the Register
+	SUB reg, tmp;    ; Subtract Temporary from the Register
+	OUT reg, $02;    ; Output the Result
+	RET;             ; Return to Loop
+
+; Scroll Down!
+
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+JUMP _setup;         ; Reset
+
+_vector:             ; Interrupt Vector Table Label (Must be at $FF)
+	CALL _callback;  ; Run the Callback
